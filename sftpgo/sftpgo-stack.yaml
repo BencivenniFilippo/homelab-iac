@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: obsidian-sync
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sftpgo-pvc
+  namespace: obsidian-sync
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sftpgo
+  namespace: obsidian-sync
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sftpgo
+  template:
+    metadata:
+      labels:
+        app: sftpgo
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+      - name: sftpgo
+        image: drakkan/sftpgo:latest
+        ports:
+        - containerPort: 8080
+        - containerPort: 8090
+        env:
+        - name: SFTPGO_WEBDAVD__BINDINGS__0__PORT
+          value: "8090"
+        volumeMounts:
+        - name: data
+          mountPath: /srv/sftpgo/data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: sftpgo-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sftpgo-tailscale
+  namespace: obsidian-sync
+spec:
+  type: LoadBalancer
+  loadBalancerClass: tailscale
+  selector:
+    app: sftpgo
+  ports:
+    - name: admin
+      port: 8080
+      targetPort: 8080
+    - name: webdav
+      port: 8090
+      targetPort: 8090
