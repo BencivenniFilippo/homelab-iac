@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nextcloud-ingress
+  namespace: nextcloud
+  annotations:
+    # Tells NGINX to route to the Nextcloud backend service
+    kubernetes.io/ingress.class: "nginx"
+    # Triggers cert-manager to perform the DNS-01 challenge via Cloudflare
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # Optional Nextcloud header optimizations
+    nginx.ingress.kubernetes.io/proxy-body-size: "10G"
+    nginx.ingress.kubernetes.io/server-snippet: |
+      server_tokens off;
+spec:
+  tls:
+  - hosts:
+    - nextcloud.filippo-homelab.dev
+    secretName: nextcloud-tls
+  rules:
+  - host: nextcloud.filippo-homelab.dev
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nextcloud
+            port:
+              number: 80
