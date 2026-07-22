@@ -10,8 +10,6 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     # Optional Nextcloud header optimizations
     nginx.ingress.kubernetes.io/proxy-body-size: "10G"
-    nginx.ingress.kubernetes.io/server-snippet: |
-      server_tokens off;
 spec:
   tls:
   - hosts:
