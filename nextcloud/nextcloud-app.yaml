@@ -1,3 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-data
+  namespace: nextcloud
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi # You can increase this if you have a lot of pictures
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,6 +42,14 @@ spec:
             secretKeyRef:
               name: postgres-secret
               key: password
+        # THIS IS THE CRITICAL ADDITION
+        volumeMounts:
+        - name: nextcloud-data
+          mountPath: /var/www/html
+      volumes:
+      - name: nextcloud-data
+        persistentVolumeClaim:
+          claimName: nextcloud-data
 ---
 apiVersion: v1
 kind: Service
